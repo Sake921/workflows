@@ -1,17 +1,15 @@
-name: Orlen Price Scraper
+name: Orlen Price Scraper & Extrator
 
 on:
   schedule:
-    - cron: '0 8 * * *'
+    - cron: '0 9 * * *'
   workflow_dispatch: 
 
 jobs:
   run-scraper:
     runs-on: ubuntu-latest
-    # Add this section here:
     env:
       FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
-    
     permissions:
       contents: write
 
@@ -25,19 +23,21 @@ jobs:
           python-version: '3.10'
 
       - name: Install Requirements
-        run: pip install requests
+        # Added pdfplumber here
+        run: pip install requests pdfplumber
 
       - name: Execute Scraper
         run: python script.py
 
-      - name: Commit and Push PDF
+      - name: Commit and Push Changes
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git add Orlen_Prices/*.pdf
+          # Add both the new PDF and the updated CSV
+          git add Orlen_Prices/*.pdf price_history.csv
           if git diff --staged --quiet; then
-            echo "No new PDF found today."
+            echo "No changes today."
           else
-            git commit -m "Auto-add price protocol"
+            git commit -m "Update prices for $(date +'%Y-%m-%d')"
             git push
           fi
