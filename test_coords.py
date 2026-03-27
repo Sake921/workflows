@@ -13,7 +13,7 @@ else:
         found = False
         for word in page.extract_words():
             # We search for the known price to "map" the coordinates
-            if "1 324.21" in word['text']:
+            if "324.21" in word['text']:
                 print(f"✅ MATCH FOUND!")
                 print(f"Text: {word['text']}")
                 print(f"Suggested PRICE_BOX: ({word['x0']}, {word['top']}, {word['x1']}, {word['bottom']})")
