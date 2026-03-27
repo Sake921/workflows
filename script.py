@@ -1,6 +1,14 @@
 import requests
 import os
 from datetime import datetime, timedelta
+import sys
+
+# 0. Updated logic to handle weekends quietly
+
+today_name = datetime.now().strftime('%A')
+if today_name in ['Saturday', 'Sunday']:
+    print(f"Today is {today_name}. Orlen doesn't publish on weekends. Exiting quietly...")
+    sys.exit(0) # This tells GitHub the "Job Succeeded" even though it did nothing
 
 # 1. Configuration (Local folder in your GitHub repo)
 target_folder = 'Orlen_Prices'
