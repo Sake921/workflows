@@ -5,23 +5,25 @@ import csv
 from datetime import datetime, timedelta
 
 # --- CONFIGURATION ---
-# Replace these coordinates with the ones you find using the "Visual Debug"
-# Format: (x0, top, x1, bottom)
-PRICE_BOX = (440, 315, 520, 335) 
-CSV_FILE = 'price_history.csv'
-TARGET_FOLDER = 'Orlen_Prices'
+# These coordinates are the "Box" where the price lives in the PDF
+# (Left, Top, Right, Bottom)
+PRICE_BOX = (450, 300, 535, 315) 
 
 def extract_price(pdf_path):
-    try:
-        with pdfplumber.open(pdf_path) as pdf:
-            page = pdf.pages[0]
-            # Crop to the particular place
-            cropped = page.within_bbox(PRICE_BOX)
-            text = cropped.extract_text()
-            return text.strip() if text else None
-    except Exception as e:
-        print(f"Error reading PDF: {e}")
-        return None
+    with pdfplumber.open(pdf_path) as pdf:
+        page = pdf.pages[0]
+        # 1. "Crop" the PDF to only look at that specific cell
+        cropped_area = page.within_bbox(PRICE_BOX)
+        
+        # 2. Grab the text (e.g., "1 494.62" today, "1 502.10" tomorrow)
+        raw_text = cropped_area.extract_text()
+        
+        if raw_text:
+            # Clean up: remove spaces so "1 494.62" becomes "1494.62" (a clean number)
+            clean_price = raw_text.replace(" ", "").strip()
+            return clean_price
+            
+    return None # Return None if the box is empty
 
 def update_csv(date_str, price):
     file_exists = os.path.isfile(CSV_FILE)
