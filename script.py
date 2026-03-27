@@ -5,7 +5,7 @@ import csv
 from datetime import datetime, timedelta
 
 # --- CONFIGURATION (Added the missing variables here) ---
-PRICE_BOX = (450, 300, 535, 315) 
+PRICE_BOX = (480, 215, 545, 231)
 TARGET_FOLDER = 'Orlen_Prices'
 CSV_FOLDER = 'Price_Data'          # New folder name
 CSV_FILE = os.path.join(CSV_FOLDER, 'price_history.csv')
@@ -14,20 +14,18 @@ def extract_price(pdf_path):
     try:
         with pdfplumber.open(pdf_path) as pdf:
             page = pdf.pages[0]
-            # 1. "Crop" the PDF to only look at that specific cell
-            cropped_area = page.within_bbox(PRICE_BOX)
-            
-            # 2. Grab the text
-            raw_text = cropped_area.extract_text()
+            cropped = page.within_bbox(PRICE_BOX)
+            raw_text = cropped.extract_text()
             
             if raw_text:
-                # Clean up: remove spaces so "1 494.62" becomes "1494.62"
-                clean_price = raw_text.replace(" ", "").strip()
+                print(f"DEBUG: Found raw text: '{raw_text}'")
+                # 1. Remove spaces: "1 324.21" -> "1324.21"
+                # 2. Remove commas just in case: "1,324.21" -> "1324.21"
+                clean_price = raw_text.replace(" ", "").replace(",", "").strip()
                 return clean_price
     except Exception as e:
-        print(f"Error during PDF extraction: {e}")
-            
-    return None 
+        print(f"Error: {e}")
+    return None
 
 if not os.path.exists(CSV_FOLDER):
     os.makedirs(CSV_FOLDER)
