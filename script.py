@@ -35,7 +35,7 @@ def update_csv(date_str, price):
     with open(CSV_FILE, 'a', newline='') as f:
         writer = csv.writer(f)
         if not file_exists:
-            writer.writerow(['Date', 'Price_EUR'])
+            writer.writerow(['Date', 'Kaina_su_PVM']) 
         writer.writerow([date_str, price])
 
 # --- MAIN LOGIC ---
