@@ -4,26 +4,29 @@ import pdfplumber
 import csv
 from datetime import datetime, timedelta
 
-# --- CONFIGURATION ---
-# These coordinates are the "Box" where the price lives in the PDF
-# (Left, Top, Right, Bottom)
+# --- CONFIGURATION (Added the missing variables here) ---
 PRICE_BOX = (450, 300, 535, 315) 
+TARGET_FOLDER = 'Orlen_Prices'
+CSV_FILE = 'price_history.csv'
 
 def extract_price(pdf_path):
-    with pdfplumber.open(pdf_path) as pdf:
-        page = pdf.pages[0]
-        # 1. "Crop" the PDF to only look at that specific cell
-        cropped_area = page.within_bbox(PRICE_BOX)
-        
-        # 2. Grab the text (e.g., "1 494.62" today, "1 502.10" tomorrow)
-        raw_text = cropped_area.extract_text()
-        
-        if raw_text:
-            # Clean up: remove spaces so "1 494.62" becomes "1494.62" (a clean number)
-            clean_price = raw_text.replace(" ", "").strip()
-            return clean_price
+    try:
+        with pdfplumber.open(pdf_path) as pdf:
+            page = pdf.pages[0]
+            # 1. "Crop" the PDF to only look at that specific cell
+            cropped_area = page.within_bbox(PRICE_BOX)
             
-    return None # Return None if the box is empty
+            # 2. Grab the text
+            raw_text = cropped_area.extract_text()
+            
+            if raw_text:
+                # Clean up: remove spaces so "1 494.62" becomes "1494.62"
+                clean_price = raw_text.replace(" ", "").strip()
+                return clean_price
+    except Exception as e:
+        print(f"Error during PDF extraction: {e}")
+            
+    return None 
 
 def update_csv(date_str, price):
     file_exists = os.path.isfile(CSV_FILE)
@@ -53,12 +56,12 @@ if response.status_code == 200:
     with open(path, 'wb') as f:
         f.write(response.content)
     
-    # NEW: Extract and Save
+    # Extract and Save
     price = extract_price(path)
     if price:
         update_csv(date_str, price)
         print(f"✅ Success! Extracted Price: {price}")
     else:
-        print("⚠️ PDF downloaded, but price not found at coordinates.")
+        print(f"⚠️ PDF downloaded, but price not found at coordinates {PRICE_BOX}.")
 else:
-    print(f"❌ No file found for {date_str}")
+    print(f"❌ No file found for {date_str} (Status: {response.status_code})")
