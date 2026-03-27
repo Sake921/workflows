@@ -33,11 +33,11 @@ jobs:
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          # Add both the new PDF and the updated CSV
-          git add Orlen_Prices/*.pdf price_history.csv
+          # Update this line to include the new folder
+          git add Orlen_Prices/*.pdf Price_Data/*.csv
           if git diff --staged --quiet; then
             echo "No changes today."
           else
-            git commit -m "Update prices for $(date +'%Y-%m-%d')"
+            git commit -m "Update prices and CSV for $(date +'%Y-%m-%d')"
             git push
           fi
