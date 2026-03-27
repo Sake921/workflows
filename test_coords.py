@@ -20,7 +20,7 @@ else:
                 found = True
         
         if not found:
-            print("❌ Could not find '494.62'. Printing all words in that area...")
+            print("❌ Could not find '324.21'. Printing all words in that area...")
             # If it fails, this helps you see what IS there
             for word in page.extract_words():
                 if 400 < word['x0'] < 600: # Only show words on the right side
