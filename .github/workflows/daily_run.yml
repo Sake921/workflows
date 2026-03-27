@@ -2,15 +2,16 @@ name: Orlen Price Scraper
 
 on:
   schedule:
-    # Runs at 08:00 UTC (10:00 AM/11:00 AM Lithuania time)
     - cron: '0 8 * * *'
-  workflow_dispatch: # Allows manual run button
+  workflow_dispatch: 
 
 jobs:
   run-scraper:
     runs-on: ubuntu-latest
+    # Add this section here:
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
     
-    # Crucial: This gives the bot permission to upload files to your repo
     permissions:
       contents: write
 
@@ -34,10 +35,9 @@ jobs:
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git add Orlen_Prices/*.pdf
-          # Only push if a new file was actually downloaded
           if git diff --staged --quiet; then
             echo "No new PDF found today."
           else
-            git commit -m "Auto-add price protocol for ${yesterday}"
+            git commit -m "Auto-add price protocol"
             git push
           fi
