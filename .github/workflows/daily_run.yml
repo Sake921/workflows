@@ -28,7 +28,7 @@ jobs:
         run: pip install requests
 
       - name: Execute Scraper
-        run: python script.py
+        run: python history.py
 
       - name: Commit and Push PDF
         run: |
