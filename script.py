@@ -1,46 +1,62 @@
 import requests
 import os
+import pdfplumber
+import csv
 from datetime import datetime, timedelta
-import sys
 
-# 0. Updated logic to handle weekends quietly
+# --- CONFIGURATION ---
+# Replace these coordinates with the ones you find using the "Visual Debug"
+# Format: (x0, top, x1, bottom)
+PRICE_BOX = (440, 315, 520, 335) 
+CSV_FILE = 'price_history.csv'
+TARGET_FOLDER = 'Orlen_Prices'
 
-today_name = datetime.now().strftime('%A')
-if today_name in ['Saturday', 'Sunday']:
-    print(f"Today is {today_name}. Orlen doesn't publish on weekends. Exiting quietly...")
-    sys.exit(0) # This tells GitHub the "Job Succeeded" even though it did nothing
+def extract_price(pdf_path):
+    try:
+        with pdfplumber.open(pdf_path) as pdf:
+            page = pdf.pages[0]
+            # Crop to the particular place
+            cropped = page.within_bbox(PRICE_BOX)
+            text = cropped.extract_text()
+            return text.strip() if text else None
+    except Exception as e:
+        print(f"Error reading PDF: {e}")
+        return None
 
-# 1. Configuration (Local folder in your GitHub repo)
-target_folder = 'Orlen_Prices'
-if not os.path.exists(target_folder):
-    os.makedirs(target_folder)
+def update_csv(date_str, price):
+    file_exists = os.path.isfile(CSV_FILE)
+    with open(CSV_FILE, 'a', newline='') as f:
+        writer = csv.writer(f)
+        if not file_exists:
+            writer.writerow(['Date', 'Price_EUR'])
+        writer.writerow([date_str, price])
 
-# 2. Generate the Dynamic URL
+# --- MAIN LOGIC ---
 today = datetime.now()
 yesterday = today - timedelta(days=1)
-year = yesterday.strftime('%Y')
-month = yesterday.strftime('%m')
-day = yesterday.strftime('%d')
+date_str = yesterday.strftime('%Y-%m-%d')
+file_name = yesterday.strftime('%Y_%m_%d_LT.pdf')
 
-# Using your tested file naming and URL logic
-file_name = f"{year}_{month}_{day}_LT.pdf"
-full_url = f"https://www.orlenlietuva.lt/LT/Wholesale/Prices/Kainos%20{year}%20{month}%20{day}%20realizacija%20internet.pdf"
+# Your tested URL logic
+url = f"https://www.orlenlietuva.lt/LT/Wholesale/Prices/Kainos%20{yesterday.strftime('%Y')}%20{yesterday.strftime('%m')}%20{yesterday.strftime('%d')}%20realizacija%20internet.pdf"
 
-print(f"Attempting to download: {full_url}")
+if not os.path.exists(TARGET_FOLDER):
+    os.makedirs(TARGET_FOLDER)
 
-# 3. Download and Save
-try:
-    response = requests.get(full_url, stream=True, timeout=15)
+print(f"Checking: {url}")
+response = requests.get(url, timeout=15)
+
+if response.status_code == 200:
+    path = os.path.join(TARGET_FOLDER, file_name)
+    with open(path, 'wb') as f:
+        f.write(response.content)
     
-    if response.status_code == 200:
-        file_path = os.path.join(target_folder, file_name)
-        with open(file_path, 'wb') as f:
-            f.write(response.content)
-        print(f"✅ Success! Saved to: {file_path}")
-    elif response.status_code == 404:
-        print(f"❌ File not found: {full_url}")
+    # NEW: Extract and Save
+    price = extract_price(path)
+    if price:
+        update_csv(date_str, price)
+        print(f"✅ Success! Extracted Price: {price}")
     else:
-        print(f"⚠️ Failed with status code: {response.status_code}")
-
-except Exception as e:
-    print(f"An error occurred: {e}")
+        print("⚠️ PDF downloaded, but price not found at coordinates.")
+else:
+    print(f"❌ No file found for {date_str}")
