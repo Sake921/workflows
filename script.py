@@ -7,7 +7,8 @@ from datetime import datetime, timedelta
 # --- CONFIGURATION (Added the missing variables here) ---
 PRICE_BOX = (450, 300, 535, 315) 
 TARGET_FOLDER = 'Orlen_Prices'
-CSV_FILE = 'price_history.csv'
+CSV_FOLDER = 'Price_Data'          # New folder name
+CSV_FILE = os.path.join(CSV_FOLDER, 'price_history.csv')
 
 def extract_price(pdf_path):
     try:
@@ -27,6 +28,9 @@ def extract_price(pdf_path):
         print(f"Error during PDF extraction: {e}")
             
     return None 
+
+if not os.path.exists(CSV_FOLDER):
+    os.makedirs(CSV_FOLDER)
 
 def update_csv(date_str, price):
     file_exists = os.path.isfile(CSV_FILE)
