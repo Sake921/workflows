@@ -1,0 +1,32 @@
+name: Rebuild Historical CSV
+
+on:
+  workflow_dispatch: # Manual button only
+
+jobs:
+  rebuild:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install Requirements
+        run: pip install requests pdfplumber
+
+      - name: Run History Script
+        run: python history.py
+
+      - name: Commit Changes
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add Orlen_Prices/*.pdf Price_Data/price_history.csv
+          git commit -m "Rebuilt historical price data" || echo "No changes to commit"
+          git push
