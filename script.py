@@ -78,18 +78,21 @@ def try_process_date(target_date):
     
     return False
 
-# --- MAIN EXECUTION ---
+# --- MAIN EXECUTION (Smart Lookback) ---
 if __name__ == "__main__":
     today = datetime.now()
+    found = False
     
-    print(f"--- Starting Scraper Run: {today.strftime('%Y-%m-%d %H:%M')} ---")
+    print(f"--- Starting Scraper Run: {today.strftime('%Y-%m-%d')} ---")
     
-    # Step 1: Try Today
-    if not try_process_date(today):
-        print("Falling back to Yesterday's data...")
-        # Step 2: Fallback to Yesterday if Today isn't published yet
-        yesterday = today - timedelta(days=1)
-        if not try_process_date(yesterday):
-            print("Final Result: No new data found for Today or Yesterday.")
+    # Check today, then yesterday, then the day before... up to 4 days back
+    for i in range(4):
+        target_date = today - timedelta(days=i)
+        if try_process_date(target_date):
+            found = True
+            break  # Stop as soon as we find the most recent file
+            
+    if not found:
+        print("❌ Final Result: No files found in the last 4 days.")
     
     print("--- Scraper Run Finished ---")
