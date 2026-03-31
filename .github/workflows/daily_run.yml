@@ -2,7 +2,8 @@ name: Orlen Price Scraper & Extrator
 
 on:
   schedule:
-    - cron: '30 8 * * *'
+  # 06:10 UTC is 09:10 Vilnius time (during Summer Time/EEST)
+    - cron: '10 6 * * *'
   workflow_dispatch: 
 
 jobs:
